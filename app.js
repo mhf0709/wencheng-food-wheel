@@ -333,8 +333,7 @@ const localItems = [
 
 let mode = "all";
 let selectedCategory = "stirfry";
-let wheelRotation = 0;
-let isSpinning = false;
+let isDrawing = false;
 let currentResult = null;
 let customItems = loadJson(STORAGE_KEYS.custom, []);
 let historyItems = loadJson(STORAGE_KEYS.history, []);
@@ -345,10 +344,14 @@ const elements = {
   modeButtons: [...document.querySelectorAll(".mode-button")],
   poolTitle: document.querySelector("#pool-title"),
   poolCount: document.querySelector("#pool-count"),
-  wheel: document.querySelector("#wheel"),
-  wheelLabels: document.querySelector("#wheel-labels"),
-  spinButton: document.querySelector("#spin-button"),
-  wheelStatus: document.querySelector("#wheel-status"),
+  blindBoxMachine: document.querySelector("#blind-box-machine"),
+  capsuleBed: document.querySelector("#capsule-bed"),
+  machinePoolCount: document.querySelector("#machine-pool-count"),
+  drawnCapsule: document.querySelector("#drawn-capsule"),
+  drawnCapsuleIcon: document.querySelector("#drawn-capsule-icon"),
+  drawnCapsuleName: document.querySelector("#drawn-capsule-name"),
+  drawButton: document.querySelector("#draw-button"),
+  drawStatus: document.querySelector("#draw-status"),
   resultBadge: document.querySelector("#result-badge"),
   resultNumber: document.querySelector("#result-number"),
   resultEmpty: document.querySelector("#result-empty"),
@@ -464,65 +467,85 @@ function updateControls() {
   const category = categoryFor(selectedCategory);
   elements.poolTitle.textContent = mode === "all" ? "全部美食" : category.label;
   elements.poolCount.textContent = String(pool.length);
-  elements.wheelStatus.textContent = mode === "all"
-    ? `全部 ${pool.length} 个候选，随缘开转`
-    : `${category.label}类 ${pool.length} 个候选，准备好了`;
-  renderWheel(pool);
+  elements.drawStatus.textContent = mode === "all"
+    ? `全部 ${pool.length} 颗盲盒球，随缘抽一颗`
+    : `${category.label}类 ${pool.length} 颗盲盒球，准备好了`;
+  renderCapsules(pool);
 }
 
-function renderWheel(pool) {
-  const category = mode === "all" ? null : categoryFor(selectedCategory);
-  const colors = category?.colors || ["#b94735", "#d8a43e", "#76515b", "#2e5a4c"];
-  const displayItems = pool.slice(0, 8);
-  const segments = Math.max(displayItems.length, 1);
-  const stops = [];
-  for (let index = 0; index < segments; index += 1) {
-    const start = (index / segments) * 100;
-    const end = ((index + 1) / segments) * 100;
-    stops.push(`${colors[index % colors.length]} ${start}% ${end}%`);
-  }
-  elements.wheel.style.background = `conic-gradient(${stops.join(", ")})`;
-  elements.wheelLabels.replaceChildren();
+function renderCapsules(pool) {
+  const positions = [
+    [5, 68, 58, -12], [22, 66, 64, 8], [43, 69, 56, -7], [61, 64, 66, 13], [81, 68, 55, -10],
+    [11, 48, 63, 11], [33, 51, 54, -14], [51, 46, 62, 5], [72, 48, 58, -5], [86, 45, 52, 14],
+    [20, 27, 54, -8], [42, 28, 60, 12], [64, 25, 55, -12], [79, 23, 61, 7],
+  ];
+  const displayCount = Math.min(positions.length, pool.length);
+  const displayItems = Array.from({ length: displayCount }, (_, index) => (
+    pool[Math.floor((index * pool.length) / displayCount)]
+  ));
 
+  elements.capsuleBed.replaceChildren();
   displayItems.forEach((item, index) => {
-    const label = document.createElement("span");
-    const angle = (360 / displayItems.length) * index + 360 / displayItems.length / 2;
-    label.className = "wheel-label";
-    label.textContent = item.name.length > 8 ? `${item.name.slice(0, 8)}…` : item.name;
-    label.style.transform = `rotate(${angle}deg) translateY(-126px) rotate(${-angle}deg) translate(-50%, -50%)`;
-    elements.wheelLabels.append(label);
+    const [x, y, size, rotation] = positions[index];
+    const capsule = document.createElement("span");
+    const category = categoryFor(item.category);
+    capsule.className = `capsule-ball capsule-${item.category}`;
+    capsule.style.setProperty("--x", `${x}%`);
+    capsule.style.setProperty("--y", `${y}%`);
+    capsule.style.setProperty("--size", `${size}px`);
+    capsule.style.setProperty("--rotation", `${rotation}deg`);
+    capsule.style.setProperty("--delay", `${(index % 7) * -0.09}s`);
+    capsule.textContent = category.icon;
+    elements.capsuleBed.append(capsule);
   });
+
+  elements.machinePoolCount.textContent = `${pool.length} BALLS`;
+  elements.blindBoxMachine.classList.remove("is-drawing", "is-delivering");
+  elements.drawnCapsule.className = "drawn-capsule";
+  elements.drawnCapsuleIcon.textContent = "？";
+  elements.drawnCapsuleName.textContent = "等待出球";
 }
 
 function randomFrom(items) {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-function spin() {
-  if (isSpinning) return;
+function drawBlindBox() {
+  if (isDrawing) return;
   const pool = currentPool();
   if (!pool.length) {
-    elements.wheelStatus.textContent = "这个分类还没有候选，先添加一家吧。";
+    elements.drawStatus.textContent = "这个分类还没有盲盒球，先添加一家吧。";
     return;
   }
 
-  isSpinning = true;
+  isDrawing = true;
   currentResult = randomFrom(pool);
-  const extraTurns = 5 + Math.floor(Math.random() * 3);
-  const landingOffset = Math.floor(Math.random() * 300) + 30;
-  wheelRotation += extraTurns * 360 + landingOffset;
-  elements.wheel.style.transform = `rotate(${wheelRotation}deg)`;
-  elements.spinButton.disabled = true;
-  elements.wheelStatus.textContent = "签筒正在替你们吵架……";
-  elements.resultBadge.textContent = "正在抽签";
+  const resultCategory = categoryFor(currentResult.category);
+  elements.blindBoxMachine.classList.remove("is-delivering");
+  elements.drawnCapsule.className = "drawn-capsule";
+  elements.drawnCapsuleIcon.textContent = "？";
+  elements.drawnCapsuleName.textContent = "盲盒球翻滚中";
+  elements.drawButton.disabled = true;
+  elements.drawStatus.textContent = "球仓正在替你们做决定……";
+  elements.resultBadge.textContent = "正在抽盲盒";
+  window.requestAnimationFrame(() => elements.blindBoxMachine.classList.add("is-drawing"));
 
   window.setTimeout(() => {
-    isSpinning = false;
-    elements.spinButton.disabled = false;
-    elements.wheelStatus.textContent = "决定好了，不许反悔。";
+    elements.blindBoxMachine.classList.remove("is-drawing");
+    elements.blindBoxMachine.classList.add("is-delivering");
+    elements.drawnCapsule.classList.add("is-visible", `capsule-${currentResult.category}`);
+    elements.drawnCapsuleIcon.textContent = resultCategory.icon;
+    elements.drawnCapsuleName.textContent = currentResult.name;
+    elements.drawStatus.textContent = "出球了，正在揭晓今晚的答案……";
+  }, 1750);
+
+  window.setTimeout(() => {
+    isDrawing = false;
+    elements.drawButton.disabled = false;
+    elements.drawStatus.textContent = "抽到了，不许反悔。";
     showResult(currentResult);
     pushHistory(currentResult);
-  }, 3350);
+  }, 2650);
 }
 
 function renderMeta(target, meta) {
@@ -557,7 +580,7 @@ function openResultModal() {
 
 function showResult(item) {
   const category = categoryFor(item.category);
-  const badge = item.sourceKind === "platform" ? "点评店铺签" : item.sourceKind === "custom" ? "私房签" : "文成风味签";
+  const badge = item.sourceKind === "platform" ? "点评店铺球" : item.sourceKind === "custom" ? "私房球" : "文成风味球";
   const dishText = item.dish ? `建议就点：${item.dish}` : "到店看当天菜单，听老板推荐。";
   const sourceNote = item.sourceKind === "platform"
     ? "价格、评价和推荐菜来自大众点评页面快照，出发前请以平台最新页面为准。"
@@ -689,7 +712,7 @@ function addCustomItem(event) {
   });
   saveJson(STORAGE_KEYS.custom, customItems);
   elements.customForm.reset();
-  elements.formMessage.textContent = `“${name}”已经放进签筒。`;
+  elements.formMessage.textContent = `“${name}”已经放进球池。`;
   updateControls();
 }
 
@@ -734,14 +757,14 @@ elements.modeButtons.forEach((button) => {
     updateControls();
   });
 });
-elements.spinButton.addEventListener("click", spin);
+elements.drawButton.addEventListener("click", drawBlindBox);
 elements.copyResult.addEventListener("click", () => copyCurrentResult(elements.copyResult));
 elements.modalCopyResult.addEventListener("click", () => copyCurrentResult(elements.modalCopyResult));
 elements.modalClose.addEventListener("click", closeResultModal);
 elements.modalAccept.addEventListener("click", closeResultModal);
 elements.modalRespin.addEventListener("click", () => {
   closeResultModal();
-  window.setTimeout(spin, 160);
+  window.setTimeout(drawBlindBox, 160);
 });
 elements.resultModal.addEventListener("click", (event) => {
   if (event.target === elements.resultModal) closeResultModal();

@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#19382f" />
     <meta
       name="description"
-      content="文成县今晚吃什么随机转盘：按烧烤、泡泡、面食、炒菜随机选择本地美食和店铺。"
+      content="文成县今晚吃什么盲盒机：按烧烤、泡泡、面食、炒菜随机抽取本地美食和店铺。"
     />
     <title>文成夜食签｜今晚吃什么</title>
-    <link rel="stylesheet" href="./styles.css?v=20260818-3" />
+    <link rel="stylesheet" href="./styles.css?v=20260818-4" />
     <script src="./data.js?v=20260818-2" defer></script>
-    <script src="./app.js?v=20260818-3" defer></script>
+    <script src="./app.js?v=20260818-4" defer></script>
   </head>
   <body>
     <div class="paper-grain" aria-hidden="true"></div>
@@ -31,11 +31,11 @@
       <section class="hero" aria-labelledby="page-title">
         <div class="hero-copy reveal reveal-1">
           <p class="eyebrow">浙江 · 文成 · 今晚</p>
-          <h1 id="page-title">别争了，<br /><em>让转盘开口。</em></h1>
+          <h1 id="page-title">别争了，<br /><em>让盲盒开口。</em></h1>
           <p class="hero-lead">
             想吃什么不重要，今晚开心最重要。先选一个大类，或者把决定权全部交出去。
           </p>
-          <a class="text-link" href="#decision">现在开转 <span aria-hidden="true">↘</span></a>
+          <a class="text-link" href="#decision">现在抽一个 <span aria-hidden="true">↘</span></a>
         </div>
 
         <div class="hero-poster reveal reveal-2" aria-hidden="true">
@@ -56,11 +56,11 @@
         <div class="section-heading">
           <p class="eyebrow">01 / 把选择交出来</p>
           <h2 id="decision-title">今晚的答案</h2>
-          <p>“全部随机”会混合所有品类；“按大类”只在你选中的类别里转。</p>
+          <p>“全部随机”会混合所有品类；“按大类”只从你选中的类别盲盒球里抽取。</p>
         </div>
 
         <div class="decision-grid">
-          <aside class="control-panel" aria-label="转盘设置">
+          <aside class="control-panel" aria-label="盲盒抽取设置">
             <div class="panel-label">先定规矩</div>
             <div class="mode-switch" role="group" aria-label="随机方式">
               <button class="mode-button is-active" type="button" data-mode="all" aria-pressed="true">
@@ -74,7 +74,7 @@
             <div class="category-list" id="category-list" aria-label="美食分类"></div>
 
             <div class="pool-ticket">
-              <span>本轮签筒</span>
+              <span>本轮球池</span>
               <strong id="pool-title">全部美食</strong>
               <small><b id="pool-count">0</b> 个候选答案</small>
             </div>
@@ -82,27 +82,43 @@
             <p class="category-hint">“泡泡”按你原来的标签保留，这里收纳甜品、饮品和轻小吃。</p>
           </aside>
 
-          <div class="wheel-stage" aria-label="随机美食转盘">
-            <div class="wheel-pointer" aria-hidden="true"></div>
-            <div class="wheel-shell">
-              <div class="wheel" id="wheel">
-                <div class="wheel-labels" id="wheel-labels" aria-hidden="true"></div>
-                <div class="wheel-center" aria-hidden="true">
-                  <span>文成</span>
-                  <strong>食</strong>
+          <div class="blind-box-stage" aria-label="随机美食盲盒机">
+            <div class="blind-box-title" aria-hidden="true">
+              <span>WENCHENG FOOD GACHA</span>
+              <strong>今晚盲盒机</strong>
+            </div>
+            <div class="blind-box-machine" id="blind-box-machine">
+              <div class="machine-marquee" aria-hidden="true">
+                <span>今晚吃什么</span>
+                <b id="machine-pool-count">98 BALLS</b>
+              </div>
+              <div class="capsule-window">
+                <div class="capsule-bed" id="capsule-bed" aria-hidden="true"></div>
+                <div class="glass-shine" aria-hidden="true"></div>
+              </div>
+              <div class="machine-console">
+                <div class="machine-knob" aria-hidden="true">
+                  <span>抽</span>
                 </div>
+                <button class="draw-button" id="draw-button" type="button">
+                  <span class="draw-button-main">抽一个</span>
+                  <span class="draw-button-sub">今晚就吃它</span>
+                </button>
+              </div>
+              <div class="machine-chute">
+                <span class="chute-label">取餐口 / PICK UP</span>
+                <div class="drawn-capsule" id="drawn-capsule" aria-hidden="true">
+                  <span id="drawn-capsule-icon">？</span>
+                </div>
+                <strong id="drawn-capsule-name">等待出球</strong>
               </div>
             </div>
-            <button class="spin-button" id="spin-button" type="button">
-              <span class="spin-button-main">开转</span>
-              <span class="spin-button-sub">今晚就吃它</span>
-            </button>
-            <p class="wheel-status" id="wheel-status" aria-live="polite">选择模式后，按下开转</p>
+            <p class="draw-status" id="draw-status" aria-live="polite">选好范围，按下“抽一个”</p>
           </div>
 
           <aside class="result-card" id="result-card" aria-live="polite">
             <div class="result-topline">
-              <span id="result-badge">等待抽签</span>
+              <span id="result-badge">等待出球</span>
               <span id="result-number">NO. 00</span>
             </div>
             <div class="result-empty" id="result-empty">
@@ -127,7 +143,7 @@
       <section class="history-section" aria-labelledby="history-title">
         <div>
           <p class="eyebrow">最近的口供</p>
-          <h2 id="history-title">转盘刚才说过</h2>
+          <h2 id="history-title">盲盒刚才抽到</h2>
         </div>
         <ol class="history-list" id="history-list">
           <li class="history-empty">还没有记录，先转一次。</li>
@@ -187,7 +203,7 @@
             大概位置
             <input id="custom-area" name="area" type="text" maxlength="30" placeholder="例如：伯温路" />
           </label>
-          <button class="add-button" type="submit">加入签筒</button>
+          <button class="add-button" type="submit">加入球池</button>
           <button class="clear-button" id="clear-custom" type="button">清空自定义</button>
           <p class="form-message" id="form-message" aria-live="polite"></p>
         </form>
@@ -199,7 +215,7 @@
         <button class="modal-close" id="modal-close" type="button" aria-label="关闭结果弹窗">×</button>
         <div class="modal-result-topline">
           <span id="modal-result-badge">今晚有答案</span>
-          <span>签已落定 · 不许反悔</span>
+          <span>球已落定 · 不许反悔</span>
         </div>
         <div class="modal-result-heading">
           <div class="modal-decision-mark" aria-hidden="true">
