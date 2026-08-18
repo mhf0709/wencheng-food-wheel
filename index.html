@@ -10,6 +10,7 @@
     />
     <title>文成夜食签｜今晚吃什么</title>
     <link rel="stylesheet" href="./styles.css" />
+    <script src="./data.js" defer></script>
     <script src="./app.js" defer></script>
   </head>
   <body>
@@ -46,8 +47,8 @@
 
         <div class="hero-note reveal reveal-3">
           <span>数据底子</span>
-          <strong>大众点评店铺快照<br />＋ 文成地方特色</strong>
-          <small>采集于 2026.08.18</small>
+          <strong>中心城区 90 家店<br />＋ 文成地方特色</strong>
+          <small>大众点评前 6 页 · 2026.08.18</small>
         </div>
       </section>
 
@@ -140,18 +141,21 @@
             <h2 id="places-title">真实店铺，明白消费</h2>
           </div>
           <p>
-            下列内容来自你验证后的大众点评文成县美食页第一页。它是一次静态快照，不会自动同步价格和评价变化。
+            下列内容来自你验证后的大众点评“文成县中心城区”筛选页前 6 页，共 90 家。它是一次静态快照，不会自动同步价格和评价变化。
           </p>
         </div>
         <div class="store-grid" id="store-grid"></div>
-        <a
-          class="platform-link"
-          href="https://www.dianping.com/wencheng/ch10"
-          target="_blank"
-          rel="noreferrer"
-        >
-          去大众点评查看最新页面 <span aria-hidden="true">↗</span>
-        </a>
+        <div class="store-actions">
+          <button class="load-more-stores" id="load-more-stores" type="button">查看更多店铺</button>
+          <a
+            class="platform-link"
+            href="https://www.dianping.com/wencheng/ch10/r24457"
+            target="_blank"
+            rel="noreferrer"
+          >
+            去大众点评查看最新页面 <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </section>
 
       <section class="custom-section" id="custom" aria-labelledby="custom-title">

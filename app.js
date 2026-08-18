@@ -11,7 +11,7 @@ const categories = [
   { id: "stirfry", label: "炒菜", subtitle: "农家菜与正餐", icon: "炒", colors: ["#2e5a4c", "#b94735", "#d8a43e"] },
 ];
 
-const dianpingStores = [
+const legacyDianpingStores = [
   {
     id: "ahua",
     name: "阿华农家菜（文成店）",
@@ -164,6 +164,38 @@ const dianpingStores = [
   },
 ];
 
+const dianpingStores = window.DIANPING_STORES?.length
+  ? window.DIANPING_STORES
+  : legacyDianpingStores;
+
+function categoryForStore(store) {
+  const text = [store.name, store.type, ...store.dishes].join(" ");
+  if (/咖啡|甜品|面包|蛋糕|饮品|茶饮|水果|鲜果|栗子|糖水|冷饮|奶茶|西点|烘焙|Cake/i.test(text)) {
+    return "bubble";
+  }
+  if (/面馆|馄饨|抄手|扁食|饺子|拉面|面食|酸辣粉|炸酱面|花甲粉|螺蛳粉|猪脏粉/.test(text)) {
+    return "noodles";
+  }
+  if (/烧烤|烤串|烤肉|小龙虾|炸鸡炸串|炸串|鸭脖|熏鸡|羊蝎子/.test(text)) {
+    return "bbq";
+  }
+  return "stirfry";
+}
+
+const platformItems = dianpingStores.map((store) => ({
+  id: `dp-${store.id}`,
+  name: store.name,
+  category: categoryForStore(store),
+  dish: store.dishes.length ? store.dishes.join(" / ") : "到店看今日菜单",
+  area: store.area,
+  type: store.type,
+  price: store.price,
+  reviews: store.reviews,
+  url: store.url,
+  source: "大众点评页面快照",
+  sourceKind: "platform",
+}));
+
 const storeById = Object.fromEntries(dianpingStores.map((store) => [store.id, store]));
 
 function storeItem(id, category, dish, suffix = "") {
@@ -190,16 +222,7 @@ const sourceUrls = {
   goodWencheng: "https://www.66wz.com/wendu/system/2026/07/15/105805522.shtml",
 };
 
-const seedItems = [
-  storeItem("yangxiezi", "bbq", "烤鸭头"),
-  storeItem("yangxiezi", "bbq", "烤新疆羊肉串"),
-  storeItem("yangxiezi", "bbq", "新鲜牛肉串"),
-
-  storeItem("yuyuan", "bubble", "芋泥麻薯芋圆", "甜口收尾"),
-  storeItem("naixiang", "bubble", "蜜红豆厚酸奶"),
-  storeItem("yikeshu", "bubble", "三明治＋咖啡"),
-  storeItem("mojmatcha", "bubble", "抹茶迪拜巧克力"),
-  storeItem("yunkafei", "bubble", "意式浓咖啡"),
+const localItems = [
   {
     id: "local-nine-layer-cake",
     name: "文成九层糕",
@@ -227,10 +250,6 @@ const seedItems = [
     sourceKind: "local",
   },
 
-  storeItem("liangquanqimei", "noodles", "手抓饼＋芳香大鸡排"),
-  storeItem("ahua", "noodles", "葱油拌面"),
-  storeItem("ahua", "noodles", "目鱼干番薯粉"),
-  storeItem("xiangmanlou", "noodles", "高山地瓜粉"),
   {
     id: "local-wencheng-noodles",
     name: "文成拉面",
@@ -271,13 +290,6 @@ const seedItems = [
     sourceKind: "local",
   },
 
-  storeItem("ahua", "stirfry", "糯米山药"),
-  storeItem("wutong", "stirfry", "飘香鱼", "再配一份豆腐"),
-  storeItem("waxiansheng", "stirfry", "哇鲜生招牌牛蛙煲"),
-  storeItem("xiangmanlou", "stirfry", "家烧猪蹄＋野生溪鱼"),
-  storeItem("wenchenghotel", "stirfry", "南田小炒肉"),
-  storeItem("daocaoren", "stirfry", "牛排＋红烧土豆"),
-  storeItem("jiudufansi", "stirfry", "地方菜系，进店看今日菜单"),
   {
     id: "local-shanxi-fish",
     name: "珊溪包头鱼",
@@ -326,6 +338,7 @@ let isSpinning = false;
 let currentResult = null;
 let customItems = loadJson(STORAGE_KEYS.custom, []);
 let historyItems = loadJson(STORAGE_KEYS.history, []);
+let visibleStoreCount = 18;
 
 const elements = {
   categoryList: document.querySelector("#category-list"),
@@ -349,6 +362,7 @@ const elements = {
   copyResult: document.querySelector("#copy-result"),
   historyList: document.querySelector("#history-list"),
   storeGrid: document.querySelector("#store-grid"),
+  loadMoreStores: document.querySelector("#load-more-stores"),
   customForm: document.querySelector("#custom-form"),
   customName: document.querySelector("#custom-name"),
   customCategory: document.querySelector("#custom-category"),
@@ -376,7 +390,7 @@ function saveJson(key, value) {
 }
 
 function allItems() {
-  return [...seedItems, ...customItems];
+  return [...platformItems, ...localItems, ...customItems];
 }
 
 function currentPool() {
@@ -573,7 +587,7 @@ function renderHistory() {
 
 function renderStores() {
   elements.storeGrid.replaceChildren();
-  dianpingStores.forEach((store, index) => {
+  dianpingStores.slice(0, visibleStoreCount).forEach((store, index) => {
     const card = document.createElement("article");
     card.className = "store-card";
 
@@ -597,10 +611,17 @@ function renderStores() {
     link.href = store.url;
     link.target = "_blank";
     link.rel = "noreferrer";
-    link.textContent = `${store.area} · ${store.reviews} 条评价`;
+    const reviewText = Number.isFinite(store.reviews) ? `${store.reviews} 条评价` : "评价数暂无";
+    link.textContent = `${store.area} · ${reviewText}`;
     card.append(top, name, dishes, link);
     elements.storeGrid.append(card);
   });
+
+  const remaining = dianpingStores.length - visibleStoreCount;
+  elements.loadMoreStores.hidden = remaining <= 0;
+  if (remaining > 0) {
+    elements.loadMoreStores.textContent = `再看 ${Math.min(18, remaining)} 家（已显示 ${visibleStoreCount}/${dianpingStores.length}）`;
+  }
 }
 
 function addCustomItem(event) {
@@ -670,6 +691,10 @@ elements.spinButton.addEventListener("click", spin);
 elements.copyResult.addEventListener("click", copyCurrentResult);
 elements.customForm.addEventListener("submit", addCustomItem);
 elements.clearCustom.addEventListener("click", clearCustomItems);
+elements.loadMoreStores.addEventListener("click", () => {
+  visibleStoreCount = Math.min(visibleStoreCount + 18, dianpingStores.length);
+  renderStores();
+});
 
 renderStores();
 renderHistory();

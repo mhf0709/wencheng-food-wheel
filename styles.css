@@ -933,8 +933,38 @@ main {
   content: " ↗";
 }
 
-.platform-link {
+.store-actions {
   margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  align-items: center;
+}
+
+.load-more-stores {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--ink);
+  color: var(--paper-light);
+  background: var(--forest);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.load-more-stores:hover {
+  transform: translateY(-2px);
+  background: var(--cinnabar);
+}
+
+.load-more-stores[hidden] {
+  display: none;
+}
+
+.platform-link {
   display: inline-flex;
   gap: 14px;
   align-items: center;
