@@ -9,9 +9,9 @@
       content="文成县今晚吃什么随机转盘：按烧烤、泡泡、面食、炒菜随机选择本地美食和店铺。"
     />
     <title>文成夜食签｜今晚吃什么</title>
-    <link rel="stylesheet" href="./styles.css?v=20260818-2" />
+    <link rel="stylesheet" href="./styles.css?v=20260818-3" />
     <script src="./data.js?v=20260818-2" defer></script>
-    <script src="./app.js?v=20260818-2" defer></script>
+    <script src="./app.js?v=20260818-3" defer></script>
   </head>
   <body>
     <div class="paper-grain" aria-hidden="true"></div>
@@ -193,6 +193,35 @@
         </form>
       </section>
     </main>
+
+    <dialog class="result-modal" id="result-modal" aria-labelledby="modal-result-name">
+      <article class="modal-result-card">
+        <button class="modal-close" id="modal-close" type="button" aria-label="关闭结果弹窗">×</button>
+        <div class="modal-result-topline">
+          <span id="modal-result-badge">今晚有答案</span>
+          <span>签已落定 · 不许反悔</span>
+        </div>
+        <div class="modal-result-heading">
+          <div class="modal-decision-mark" aria-hidden="true">
+            <small>今晚</small>
+            <strong>吃</strong>
+          </div>
+          <div>
+            <p class="modal-result-category" id="modal-result-category"></p>
+            <h2 id="modal-result-name"></h2>
+          </div>
+        </div>
+        <p class="modal-result-dish" id="modal-result-dish"></p>
+        <dl class="modal-result-meta" id="modal-result-meta"></dl>
+        <p class="modal-result-source" id="modal-result-source"></p>
+        <div class="modal-result-actions">
+          <a id="modal-result-link" href="#" target="_blank" rel="noreferrer">去大众点评看店 ↗</a>
+          <button id="modal-copy-result" type="button">复制给老婆</button>
+          <button class="modal-respin" id="modal-respin" type="button">不服，再转一次</button>
+          <button class="modal-accept" id="modal-accept" type="button">就它了</button>
+        </div>
+      </article>
+    </dialog>
 
     <footer>
       <span>文成夜食签</span>

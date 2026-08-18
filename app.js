@@ -370,6 +370,18 @@ const elements = {
   customArea: document.querySelector("#custom-area"),
   clearCustom: document.querySelector("#clear-custom"),
   formMessage: document.querySelector("#form-message"),
+  resultModal: document.querySelector("#result-modal"),
+  modalClose: document.querySelector("#modal-close"),
+  modalResultBadge: document.querySelector("#modal-result-badge"),
+  modalResultCategory: document.querySelector("#modal-result-category"),
+  modalResultName: document.querySelector("#modal-result-name"),
+  modalResultDish: document.querySelector("#modal-result-dish"),
+  modalResultMeta: document.querySelector("#modal-result-meta"),
+  modalResultSource: document.querySelector("#modal-result-source"),
+  modalResultLink: document.querySelector("#modal-result-link"),
+  modalCopyResult: document.querySelector("#modal-copy-result"),
+  modalRespin: document.querySelector("#modal-respin"),
+  modalAccept: document.querySelector("#modal-accept"),
 };
 
 function loadJson(key, fallback) {
@@ -513,26 +525,8 @@ function spin() {
   }, 3350);
 }
 
-function showResult(item) {
-  const category = categoryFor(item.category);
-  elements.resultEmpty.hidden = true;
-  elements.resultContent.hidden = false;
-  elements.resultContent.classList.remove("is-revealing");
-  void elements.resultContent.offsetWidth;
-  elements.resultContent.classList.add("is-revealing");
-  elements.resultBadge.textContent = item.sourceKind === "platform" ? "点评店铺签" : item.sourceKind === "custom" ? "私房签" : "文成风味签";
-  elements.resultNumber.textContent = `NO. ${String(Math.floor(Math.random() * 90) + 10)}`;
-  elements.resultCategory.textContent = `${category.label} / ${item.type || "自定义"}`;
-  elements.resultName.textContent = item.name;
-  elements.resultDish.textContent = item.dish ? `建议就点：${item.dish}` : "到店看当天菜单，听老板推荐。";
-  elements.resultMeta.replaceChildren();
-
-  const meta = [
-    ["位置", item.area || "文成县"],
-    ["人均", item.price ? `约 ¥${item.price}` : "页面暂无"],
-    ["评价", Number.isFinite(item.reviews) ? `${item.reviews} 条` : "—"],
-    ["数据", item.sourceKind === "platform" ? DATA_UPDATED_AT : item.sourceKind === "custom" ? "当前浏览器" : "公开资料"],
-  ];
+function renderMeta(target, meta) {
+  target.replaceChildren();
   meta.forEach(([label, value]) => {
     const wrap = document.createElement("div");
     const dt = document.createElement("dt");
@@ -540,17 +534,68 @@ function showResult(item) {
     dt.textContent = label;
     dd.textContent = value;
     wrap.append(dt, dd);
-    elements.resultMeta.append(wrap);
+    target.append(wrap);
   });
+}
 
-  elements.resultSourceNote.textContent = item.sourceKind === "platform"
+function closeResultModal() {
+  if (typeof elements.resultModal.close === "function" && elements.resultModal.open) {
+    elements.resultModal.close();
+  } else {
+    elements.resultModal.removeAttribute("open");
+  }
+}
+
+function openResultModal() {
+  if (elements.resultModal.open) closeResultModal();
+  if (typeof elements.resultModal.showModal === "function") {
+    elements.resultModal.showModal();
+  } else {
+    elements.resultModal.setAttribute("open", "");
+  }
+}
+
+function showResult(item) {
+  const category = categoryFor(item.category);
+  const badge = item.sourceKind === "platform" ? "点评店铺签" : item.sourceKind === "custom" ? "私房签" : "文成风味签";
+  const dishText = item.dish ? `建议就点：${item.dish}` : "到店看当天菜单，听老板推荐。";
+  const sourceNote = item.sourceKind === "platform"
     ? "价格、评价和推荐菜来自大众点评页面快照，出发前请以平台最新页面为准。"
     : item.sourceKind === "custom"
       ? "这是你自己保存的候选，只存放在当前浏览器。"
       : `来源：${item.source}。地方菜资料不代表具体店铺实时供应。`;
+  const meta = [
+    ["位置", item.area || "文成县"],
+    ["人均", item.price ? `约 ¥${item.price}` : "页面暂无"],
+    ["评价", Number.isFinite(item.reviews) ? `${item.reviews} 条` : "—"],
+    ["数据", item.sourceKind === "platform" ? DATA_UPDATED_AT : item.sourceKind === "custom" ? "当前浏览器" : "公开资料"],
+  ];
+
+  elements.resultEmpty.hidden = true;
+  elements.resultContent.hidden = false;
+  elements.resultContent.classList.remove("is-revealing");
+  void elements.resultContent.offsetWidth;
+  elements.resultContent.classList.add("is-revealing");
+  elements.resultBadge.textContent = badge;
+  elements.resultNumber.textContent = `NO. ${String(Math.floor(Math.random() * 90) + 10)}`;
+  elements.resultCategory.textContent = `${category.label} / ${item.type || "自定义"}`;
+  elements.resultName.textContent = item.name;
+  elements.resultDish.textContent = dishText;
+  renderMeta(elements.resultMeta, meta);
+  elements.resultSourceNote.textContent = sourceNote;
 
   elements.resultLink.hidden = !item.url;
   if (item.url) elements.resultLink.href = item.url;
+
+  elements.modalResultBadge.textContent = badge;
+  elements.modalResultCategory.textContent = `${category.label} / ${item.type || "自定义"}`;
+  elements.modalResultName.textContent = item.name;
+  elements.modalResultDish.textContent = dishText;
+  elements.modalResultSource.textContent = sourceNote;
+  renderMeta(elements.modalResultMeta, meta);
+  elements.modalResultLink.hidden = !item.url;
+  if (item.url) elements.modalResultLink.href = item.url;
+  openResultModal();
 }
 
 function pushHistory(item) {
@@ -660,9 +705,10 @@ function clearCustomItems() {
   updateControls();
 }
 
-async function copyCurrentResult() {
+async function copyCurrentResult(button = elements.copyResult) {
   if (!currentResult) return;
   const text = `今晚吃：${currentResult.name}\n推荐：${currentResult.dish || "到店再点"}\n位置：${currentResult.area || "文成县"}`;
+  const originalLabel = button.textContent;
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
@@ -674,10 +720,11 @@ async function copyCurrentResult() {
       document.execCommand("copy");
       textarea.remove();
     }
-    elements.copyResult.textContent = "已复制";
-    window.setTimeout(() => { elements.copyResult.textContent = "复制结果"; }, 1400);
+    button.textContent = "已复制";
+    window.setTimeout(() => { button.textContent = originalLabel; }, 1400);
   } catch {
-    elements.copyResult.textContent = "复制失败";
+    button.textContent = "复制失败";
+    window.setTimeout(() => { button.textContent = originalLabel; }, 1400);
   }
 }
 
@@ -688,7 +735,17 @@ elements.modeButtons.forEach((button) => {
   });
 });
 elements.spinButton.addEventListener("click", spin);
-elements.copyResult.addEventListener("click", copyCurrentResult);
+elements.copyResult.addEventListener("click", () => copyCurrentResult(elements.copyResult));
+elements.modalCopyResult.addEventListener("click", () => copyCurrentResult(elements.modalCopyResult));
+elements.modalClose.addEventListener("click", closeResultModal);
+elements.modalAccept.addEventListener("click", closeResultModal);
+elements.modalRespin.addEventListener("click", () => {
+  closeResultModal();
+  window.setTimeout(spin, 160);
+});
+elements.resultModal.addEventListener("click", (event) => {
+  if (event.target === elements.resultModal) closeResultModal();
+});
 elements.customForm.addEventListener("submit", addCustomItem);
 elements.clearCustom.addEventListener("click", clearCustomItems);
 elements.loadMoreStores.addEventListener("click", () => {
